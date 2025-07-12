@@ -1,24 +1,28 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Film, TrendingUp, Star } from 'lucide-react';
+import { Film, TrendingUp, Star, Layers } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MovieGrid } from '@/components/MovieGrid';
+import { AdvancedSearch } from '@/components/AdvancedSearch';
+import { MovieCollections } from '@/components/MovieCollections';
 import { LoginDialog } from '@/components/LoginDialog';
 import { UserProfile } from '@/components/UserProfile';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
 
 const Index = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('discover');
   const { 
     trendingMovies, 
     searchResults, 
     isLoading, 
     fetchTrendingMovies, 
-    searchMovies,
-    userPreferences 
+    advancedSearch,
+    userPreferences,
+    currentSearchQuery
   } = useMovieStore();
   const { isLoggedIn } = useAuthStore();
 
@@ -26,14 +30,12 @@ const Index = () => {
     fetchTrendingMovies();
   }, [fetchTrendingMovies]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      searchMovies(searchQuery);
-    }
+  const handleAdvancedSearch = (query: string, filters: any) => {
+    advancedSearch(query, filters);
+    setActiveTab('discover');
   };
 
-  const moviesToShow = searchQuery ? searchResults : trendingMovies;
+  const moviesToShow = currentSearchQuery ? searchResults : trendingMovies;
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,24 +74,11 @@ const Index = () => {
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">Discover Amazing Movies</h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Get personalized recommendations based on your taste
+            Advanced search, personalized recommendations, and custom collections
           </p>
           
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="max-w-md mx-auto mb-8">
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="Search for movies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1"
-              />
-              <Button type="submit" disabled={isLoading}>
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-          </form>
+          {/* Advanced Search Bar */}
+          <AdvancedSearch onSearch={handleAdvancedSearch} />
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto mb-12">
@@ -129,26 +118,46 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Movies Section */}
-        <section>
-          <h3 className="text-2xl font-bold mb-6">
-            {searchQuery ? `Search Results for "${searchQuery}"` : 'Trending Movies'}
-          </h3>
-          
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="bg-muted rounded-lg aspect-[2/3] mb-2"></div>
-                  <div className="bg-muted h-4 rounded mb-1"></div>
-                  <div className="bg-muted h-3 rounded w-2/3"></div>
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
+            <TabsTrigger value="discover" className="flex items-center gap-2">
+              <Film className="h-4 w-4" />
+              Discover
+            </TabsTrigger>
+            <TabsTrigger value="collections" className="flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              Collections
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="discover" className="space-y-8">
+            {/* Movies Section */}
+            <section>
+              <h3 className="text-2xl font-bold mb-6">
+                {currentSearchQuery ? `Search Results for "${currentSearchQuery}"` : 'Trending Movies'}
+              </h3>
+              
+              {isLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="bg-muted rounded-lg aspect-[2/3] mb-2"></div>
+                      <div className="bg-muted h-4 rounded mb-1"></div>
+                      <div className="bg-muted h-3 rounded w-2/3"></div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <MovieGrid movies={moviesToShow} />
-          )}
-        </section>
+              ) : (
+                <MovieGrid movies={moviesToShow} />
+              )}
+            </section>
+          </TabsContent>
+
+          <TabsContent value="collections">
+            <MovieCollections />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
