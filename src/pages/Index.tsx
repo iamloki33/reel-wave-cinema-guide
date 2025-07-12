@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Film, TrendingUp, Star } from 'lucide-react';
@@ -6,7 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MovieGrid } from '@/components/MovieGrid';
+import { LoginDialog } from '@/components/LoginDialog';
+import { UserProfile } from '@/components/UserProfile';
 import { useMovieStore } from '@/store/movieStore';
+import { useAuthStore } from '@/store/authStore';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -18,6 +20,7 @@ const Index = () => {
     searchMovies,
     userPreferences 
   } = useMovieStore();
+  const { isLoggedIn } = useAuthStore();
 
   useEffect(() => {
     fetchTrendingMovies();
@@ -52,6 +55,13 @@ const Index = () => {
               <Link to="/watchlist" className="text-foreground hover:text-primary transition-colors">
                 Watchlist
               </Link>
+              {isLoggedIn ? (
+                <UserProfile />
+              ) : (
+                <LoginDialog>
+                  <Button variant="default">Login</Button>
+                </LoginDialog>
+              )}
             </nav>
           </div>
         </div>
